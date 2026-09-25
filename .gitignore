@@ -1,0 +1,9 @@
+# Credenciales y configuración personal
+.env
+config.json
+
+# Entorno y archivos generados
+.venv/
+__pycache__/
+*.py[cod]
+downloads/

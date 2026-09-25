@@ -1,0 +1,10 @@
+{
+  "search_terms": ["Nombre Apellido"],
+  "search_together_terms": ["Término A", "Término B"],
+  "timeout_seconds": 30,
+  "sections": ["III", "V"],
+  "telegram": {
+    "enabled": false,
+    "chat_id": ""
+  }
+}
