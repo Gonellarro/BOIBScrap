@@ -63,12 +63,31 @@ def main(argv: list[str] | None = None) -> int:
         terms = config.get("search_terms", [])
         if not isinstance(terms, list) or not all(isinstance(term, str) for term in terms):
             raise ValueError("search_terms debe ser una lista de textos en config.json")
-        together_terms = config.get("search_together_terms", [])
-        if not isinstance(together_terms, list) or not all(isinstance(term, str) for term in together_terms):
-            raise ValueError("search_together_terms debe ser una lista de textos en config.json")
+        raw_together_terms = config.get("search_together_terms", [])
+        if not isinstance(raw_together_terms, list):
+            raise ValueError("search_together_terms debe ser una lista en config.json")
         terms = [term.strip() for term in terms if term.strip()]
-        together_terms = [term.strip() for term in together_terms if term.strip()]
-        if not terms and not together_terms:
+        if not raw_together_terms:
+            together_groups = []
+        elif all(isinstance(term, str) for term in raw_together_terms):
+            # Compatibilidad: la lista plana actual se interpreta como un único grupo AND.
+            legacy_group = [term.strip() for term in raw_together_terms if term.strip()]
+            together_groups = [legacy_group] if legacy_group else []
+        elif all(
+            isinstance(group, list) and all(isinstance(term, str) for term in group)
+            for group in raw_together_terms
+        ):
+            together_groups = []
+            for index, group in enumerate(raw_together_terms, start=1):
+                cleaned_group = [term.strip() for term in group if term.strip()]
+                if not cleaned_group:
+                    raise ValueError(f"El grupo {index} de search_together_terms está vacío")
+                together_groups.append(cleaned_group)
+        else:
+            raise ValueError(
+                "search_together_terms debe ser una lista de textos o una lista de listas de textos"
+            )
+        if not terms and not together_groups:
             raise ValueError("Añade términos en search_terms o search_together_terms dentro de config.json")
         raw_sections = config.get("sections", ["III"])
         if not isinstance(raw_sections, list) or not all(isinstance(item, str) for item in raw_sections):
@@ -134,12 +153,16 @@ def main(argv: list[str] | None = None) -> int:
             f"núm. {bulletin.number} ({bulletin.published_date})" for bulletin in bulletins
         ))
         progress("secciones: " + ", ".join(f"Secció {section}" for section in sections))
-        progress(f"búsqueda: O ({len(terms)} término(s)); Y ({len(together_terms)} término(s))")
+        progress(
+            f"búsqueda: O ({len(terms)} término(s)); "
+            f"Y ({len(together_groups)} grupo(s), "
+            f"{sum(len(group) for group in together_groups)} término(s))"
+        )
         results = []
         for bulletin in bulletins:
             results.extend(search_bulletin(
                 client, bulletin, terms, sections=sections, progress=progress,
-                together_terms=together_terms,
+                together_terms=together_groups,
             ))
         download_dir = Path(__file__).resolve().parent.parent / "downloads"
         downloaded_results = []
@@ -192,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({
                 "bulletins": [bulletin.to_dict() for bulletin in bulletins],
                 "terms": terms,
-                "together_terms": together_terms,
+                "together_terms": together_groups,
                 "matches": [result.to_dict() for result in results],
             }, ensure_ascii=False, indent=2))
         else:

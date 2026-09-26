@@ -1,6 +1,9 @@
 {
   "search_terms": ["Nombre Apellido"],
-  "search_together_terms": ["Término A", "Término B"],
+  "search_together_terms": [
+    ["Término A", "Término B", "Término C"],
+    ["Otro término A", "Otro término B", "Otro término C"]
+  ],
   "timeout_seconds": 30,
   "sections": ["III", "V"],
   "telegram": {

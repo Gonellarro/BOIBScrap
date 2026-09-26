@@ -12,7 +12,7 @@ cp config.example.json config.json
 
 Después, ajusta en `config.json` las búsquedas, secciones y datos de Telegram. La plantilla contiene valores de ejemplo; no los uses sin cambiarlos.
 
-`search_terms` funciona con lógica O: basta con que aparezca uno de esos términos. `search_together_terms` funciona con lógica Y: todos sus términos deben aparecer en el mismo documento, aunque no estén juntos ni en el mismo orden. Los dos grupos son independientes; un documento coincide si cumple cualquiera de ellos. La comparación ignora mayúsculas y tildes. Puedes dejar vacío cualquiera de los grupos. `sections` acepta las secciones `I`, `II`, `III` y `V`; también puedes escribir sus etiquetas, por ejemplo `"Secció III"`. Si no se indica, se usa `III`.
+`search_terms` funciona con lógica O: basta con que aparezca uno de esos términos. `search_together_terms` acepta grupos de términos: todos los términos de un mismo subgrupo deben aparecer en el documento (Y), y basta con que coincida uno de los subgrupos (O). Los términos no tienen que estar juntos ni en el mismo orden. También se acepta la lista plana anterior como un único grupo AND. Un documento coincide si cumple `search_terms` o alguno de los grupos. La comparación ignora mayúsculas y tildes. Puedes dejar vacío cualquiera de los grupos. `sections` acepta las secciones `I`, `II`, `III` y `V`; también puedes escribir sus etiquetas, por ejemplo `"Secció III"`. Si no se indica, se usa `III`.
 
 ## Entorno virtual en Linux
 

@@ -41,11 +41,18 @@ def search_bulletin(
     terms: list[str],
     sections: list[str] | None = None,
     progress: Callable[[str], None] | None = None,
-    together_terms: list[str] | None = None,
+    together_terms: list[str] | list[list[str]] | None = None,
 ) -> list[SearchResult]:
     selected_sections = [normalize_section(value) for value in (sections or ["III"])]
     or_terms = [term.strip() for term in terms if term.strip()]
-    and_terms = [term.strip() for term in (together_terms or []) if term.strip()]
+    raw_together_terms = together_terms or []
+    if raw_together_terms and all(isinstance(term, str) for term in raw_together_terms):
+        and_groups = [[term.strip() for term in raw_together_terms if term.strip()]]
+    else:
+        and_groups = [
+            [term.strip() for term in group if term.strip()]
+            for group in raw_together_terms
+        ]
     results: list[SearchResult] = []
     for section in selected_sections:
         if progress:
@@ -78,9 +85,16 @@ def search_bulletin(
                 )
 
             or_matches = [match for term in or_terms if (match := find_term(term, "OR"))]
-            and_matches = [match for term in and_terms if (match := find_term(term, "AND"))]
-            and_group_satisfied = bool(and_terms) and len(and_matches) == len(and_terms)
-            matched = or_matches + (and_matches if and_group_satisfied else [])
+            and_matches: list[Match] = []
+            for group_index, group in enumerate(and_groups, start=1):
+                group_logic = f"AND grupo {group_index}"
+                group_matches = [
+                    match for term in group
+                    if (match := find_term(term, group_logic))
+                ]
+                if group and len(group_matches) == len(group):
+                    and_matches.extend(group_matches)
+            matched = or_matches + and_matches
             if matched:
                 if progress:
                     matched_terms = ", ".join(f"{match.logic}: {match.term}" for match in matched)
